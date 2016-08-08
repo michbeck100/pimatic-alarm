@@ -28,7 +28,7 @@ module.exports = (env) =>
           device.on 'state', (state) =>
             if state is false
               @alarm(device.id, false) # switch off alarm system
-              env.logger.info 'alarm deactivated'
+              env.logger.info 'alarm system deactivated'
             @_active = state
           return device
 
@@ -47,7 +47,8 @@ module.exports = (env) =>
 
         if device instanceof AlarmSwitch
           # AlarmSwitch is the only actuator acting as sensor
-          register 'state', true
+          device.on 'state', (state) =>
+            @alarm(device.id, state) # AlarmSwitch also switches off the alarm
         else if device instanceof env.devices.PresenceSensor
           register 'presence', true
         else if device instanceof env.devices.ContactSensor
