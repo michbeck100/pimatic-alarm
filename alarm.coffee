@@ -58,7 +58,8 @@ module.exports = (env) =>
             @_actuators.push device
             env.logger.debug device.id + ' registered as actuator for alarm system'
           else
-            env.logger.debug device.id + ' not registered as actuator for alarm system (was excluded)'
+            env.logger.debug device.id
+            + ' not registered as actuator for alarm system (was excluded)'
 
     alarm: (id, state) =>
       if @_active
