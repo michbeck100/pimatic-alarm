@@ -10,8 +10,8 @@ pimatic-alarm
 
 pimatic-alarm is a [pimatic](https://github.com/pimatic/pimatic) plugin, that creates an alarm system based on the existing sensors and actuators defined in the pimatic installation.
 
-By default, the alarm system switches on all devices, that extend from SwitchActuator, e.g. lights or smoke alarms.
-The alarm is triggered by any of the devices, that extend from PresenceSensor or ContactSensor, e.g. [HomeduinoRFPir](https://github.com/pimatic/pimatic-homeduino#pir-sensor-example) or [HomeduinoRFContactSensor](https://github.com/pimatic/pimatic-homeduino#contact-sensor-example).
+The alarm system can switches on all devices, that extend from SwitchActuator, e.g. lights or smoke alarms.
+The alarm can triggered by any of the devices, that extend from PresenceSensor or ContactSensor, e.g. [HomeduinoRFPir](https://github.com/pimatic/pimatic-homeduino#pir-sensor-example) or [HomeduinoRFContactSensor](https://github.com/pimatic/pimatic-homeduino#contact-sensor-example).
 
 #### Installation
 
@@ -44,14 +44,14 @@ Note that you need at least the "AlarmSystem" device, because the default state 
 
 #### Configuration
 
-To exclude devices from being registered automatically, if supported, the configuration of pimatic-alarm can be extended by adding a list of device ids to the attribute called "excludes" on the plugin configuration.
+To add devices to the alarm system, the configuration of pimatic-alarm must be extended by adding a list of device ids to the attribute called "includes" of the plugin configuration.
 Example:
 
 ```json
 "plugins": [
   {
     "plugin": "alarm",
-    "excludes": [
+    "includes": [
       "id_of_switch",
       "id_of_presenceSensor"
     ]
@@ -69,3 +69,6 @@ Do you like this plugin? Then consider a donation to support development.
 ### Changelog
 0.0.1
 * Initial release
+
+0.0.2
+* [#1](https://github.com/michbeck100/pimatic-alarm/issues/1) switched from blacklist to whitelist

@@ -6,12 +6,12 @@ module.exports = (env) =>
 
     _active: false
 
-    _excludes: []
+    _includes: []
 
     init: (app, @framework, @config) =>
       env.logger.info("Starting alarm system")
 
-      @_excludes = @config.excludes
+      @_includes = @config.includes
 
       deviceConfigDef = require('./device-config-schema.coffee')
 
@@ -36,15 +36,13 @@ module.exports = (env) =>
         if device instanceof AlarmSystem then return
 
         register = (event, expectedValue) =>
-          if device.id not in @_excludes
+          if device.id in @_includes
             env.logger.debug 'registered ' + device.id + " as sensor for alarm system"
             device.on event, (value) =>
               if value is expectedValue
                 env.logger.info 'device ' + device.id + ' activated the alarm'
                 @alarm(device.id, true)
-          else
-            env.logger.debug device.id + ' not registered as sensor for alarm system (was excluded)'
-
+          
         if device instanceof AlarmSwitch
           # AlarmSwitch is the only actuator acting as sensor
           device.on 'state', (state) =>
@@ -54,12 +52,9 @@ module.exports = (env) =>
         else if device instanceof env.devices.ContactSensor
           register 'contact', false
         else if device instanceof env.devices.SwitchActuator
-          if device.id not in @_excludes
+          if device.id in @_includes
             @_actuators.push device
             env.logger.debug device.id + ' registered as actuator for alarm system'
-          else
-            env.logger.debug device.id
-            + ' not registered as actuator for alarm system (was excluded)'
 
     alarm: (id, state) =>
       if @_active
