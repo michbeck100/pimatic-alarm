@@ -71,4 +71,7 @@ Do you like this plugin? Then consider a donation to support development.
 * Initial release
 
 0.0.2
+* fixed version
+
+0.0.3
 * [#1](https://github.com/michbeck100/pimatic-alarm/issues/1) switched from blacklist to whitelist
