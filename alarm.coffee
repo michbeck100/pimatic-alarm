@@ -1,4 +1,6 @@
 module.exports = (env) =>
+  Promise = env.require 'bluebird'
+  t = env.require('decl-api').types
 
   class AlarmPlugin extends env.plugins.Plugin
 
@@ -29,8 +31,10 @@ module.exports = (env) =>
           device.on 'state', (state) =>
             if state is false
               @setAlarm(device, false) # switch off alarm system
-              env.logger.info 'alarm system deactivated'
+            env.logger.info 'alarm system' + if state then ' activated' else ' deactivated'
             @_active = state
+          @on 'alarm', (trigger) ->
+            device._setTrigger(trigger?.name)
           return device
 
       @framework.on 'deviceAdded', (device) =>
@@ -60,11 +64,13 @@ module.exports = (env) =>
     setAlarm: (triggeringDevice, alarm) =>
       if @_active
         if @_alarm is alarm then return
-        if alarm
-          env.logger.info 'device ' + triggeringDevice.id + ' activated the alarm'
-          @framework.variableManager.setVariableToValue(@config.variable, triggeringDevice.name)
-          @emit 'alarm', triggeringDevice
         @_alarm = alarm
+        if alarm
+          env.logger.debug 'device ' + triggeringDevice.id + ' activated the alarm'
+          @emit 'alarm', triggeringDevice
+        else
+          # when switching alarm to off, set trigger to null
+          @emit 'alarm', null
 
         for actuator in @_actuators
           if actuator instanceof env.devices.SwitchActuator
@@ -75,5 +81,21 @@ module.exports = (env) =>
   class AlarmSwitch extends env.devices.DummySwitch
 
   class AlarmSystem extends env.devices.DummySwitch
+    _trigger: null
+
+    attributes:
+      trigger:
+        description: "device that triggered the alarm"
+        type: t.string
+      state:
+        description: "The current state of the switch"
+        type: t.boolean
+        labels: ['on', 'off']
+
+    getTrigger: () -> Promise.resolve(@_trigger)
+
+    _setTrigger: (trigger) ->
+      @_trigger = trigger
+      @emit 'trigger', trigger
 
   return new AlarmPlugin()

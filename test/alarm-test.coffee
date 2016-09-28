@@ -11,6 +11,8 @@ env =
       grunt.log.writeln stmt
     error: (stmt) ->
       grunt.log.writeln stmt
+  require: (dep) ->
+    require(dep)
 env.plugins = require('../node_modules/pimatic/lib/plugins') env
 env.devices = require('../node_modules/pimatic/lib/devices') env
 
@@ -34,9 +36,6 @@ describe "alarm", ->
         alarmSystem = createCallback(config, null)
       if name is "AlarmSwitch"
         alarmSwitch = createCallback(config, null)
-  }
-  framework.variableManager = {
-    setVariableToValue: (name, value) ->
   }
 
   beforeEach ->
@@ -116,13 +115,14 @@ describe "alarm", ->
       plugin.setAlarm(alarmSwitch, true)
       assert emitted
 
-    it "should set variable to name of alarm trigger", ->
-      called = false
-      framework.variableManager.setVariableToValue = (name, value) ->
-        env.logger.debug name
-        assert name is "test"
-        assert value is dummySwitch.name
-        called = true
+    it "should set trigger to name of alarm trigger", ->
       plugin._active = true
       plugin.setAlarm(dummySwitch, true)
-      assert called
+      assert alarmSystem._trigger is dummySwitch.name
+
+    it "should set trigger to undefined if alarm is switched off", ->
+      plugin._active = true
+      plugin._alarm = true
+      alarmSystem._trigger = "test"
+      plugin.setAlarm(null, false)
+      assert alarmSystem._trigger is undefined

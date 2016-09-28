@@ -24,6 +24,7 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "decl-api": "0.0.22",
     "blanket": "^1.2.2",
     "bluebird": "^3.3.4",
     "coffee-errors": "^0.8.6",
