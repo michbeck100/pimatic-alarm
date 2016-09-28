@@ -5,6 +5,7 @@ module.exports = (env) =>
     _actuators: []
 
     _active: false
+    _alarm: false
 
     _includes: []
 
@@ -18,7 +19,7 @@ module.exports = (env) =>
       @framework.deviceManager.registerDeviceClass 'AlarmSwitch',
         configDef: deviceConfigDef.AlarmSwitch
         createCallback: (config, lastState) ->
-          return new AlarmSwitch(config, lastState, @framework)
+          return new AlarmSwitch(config, lastState)
 
       @framework.deviceManager.registerDeviceClass 'AlarmSystem',
         configDef: deviceConfigDef.AlarmSwitch
@@ -27,7 +28,7 @@ module.exports = (env) =>
           device = new AlarmSystem(config, lastState)
           device.on 'state', (state) =>
             if state is false
-              @alarm(device.id, false) # switch off alarm system
+              @setAlarm(device, false) # switch off alarm system
               env.logger.info 'alarm system deactivated'
             @_active = state
           return device
@@ -40,26 +41,36 @@ module.exports = (env) =>
             env.logger.debug 'registered ' + device.id + " as sensor for alarm system"
             device.on event, (value) =>
               if value is expectedValue
-                env.logger.info 'device ' + device.id + ' activated the alarm'
-                @alarm(device.id, true)
-          
+                @setAlarm(device, true)
+
         if device instanceof AlarmSwitch
+          @_actuators.push device
           # AlarmSwitch is the only actuator acting as sensor
           device.on 'state', (state) =>
-            @alarm(device.id, state) # AlarmSwitch also switches off the alarm
+            @setAlarm(device, state) # AlarmSwitch also switches off the alarm
         else if device instanceof env.devices.PresenceSensor
           register 'presence', true
         else if device instanceof env.devices.ContactSensor
           register 'contact', false
-        else if device instanceof env.devices.SwitchActuator
+        else if device instanceof env.devices.Actuator
           if device.id in @_includes
             @_actuators.push device
             env.logger.debug device.id + ' registered as actuator for alarm system'
 
-    alarm: (id, state) =>
+    setAlarm: (triggeringDevice, alarm) =>
       if @_active
+        if @_alarm is alarm then return
+        if alarm
+          env.logger.info 'device ' + triggeringDevice.id + ' activated the alarm'
+          @framework.variableManager.setVariableToValue(@config.variable, triggeringDevice.name)
+          @emit 'alarm', triggeringDevice
+        @_alarm = alarm
+
         for actuator in @_actuators
-          actuator.changeStateTo(state)
+          if actuator instanceof env.devices.SwitchActuator
+            actuator.changeStateTo(alarm)
+          else
+            env.logger.debug 'unsupported actuator ' + actuator.id
 
   class AlarmSwitch extends env.devices.DummySwitch
 

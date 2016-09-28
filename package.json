@@ -4,6 +4,7 @@
   "author": "Michael Kotten <michaelkotten@gmail.com> (https://github.com/michbeck100/pimatic-alarm)",
   "main": "alarm.coffee",
   "files": [
+    "test",
     "alarm.coffee",
     "README.md",
     "alarm-config-schema.coffee",
