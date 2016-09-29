@@ -81,7 +81,7 @@ module.exports = (env) =>
   class AlarmSwitch extends env.devices.DummySwitch
 
   class AlarmSystem extends env.devices.DummySwitch
-    _trigger: null
+    _trigger: ""
 
     attributes:
       trigger:
@@ -95,7 +95,9 @@ module.exports = (env) =>
     getTrigger: () -> Promise.resolve(@_trigger)
 
     _setTrigger: (trigger) ->
-      @_trigger = trigger
+      # use emtpy string because trigger is shown in gui next to switch
+      trigger = "" unless trigger
+      @_trigger = if trigger then trigger else ""
       @emit 'trigger', trigger
 
   return new AlarmPlugin()

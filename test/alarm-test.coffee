@@ -120,9 +120,9 @@ describe "alarm", ->
       plugin.setAlarm(dummySwitch, true)
       assert alarmSystem._trigger is dummySwitch.name
 
-    it "should set trigger to undefined if alarm is switched off", ->
+    it "should set trigger to empty string if alarm is switched off", ->
       plugin._active = true
       plugin._alarm = true
       alarmSystem._trigger = "test"
       plugin.setAlarm(null, false)
-      assert alarmSystem._trigger is undefined
+      assert alarmSystem._trigger is ""
