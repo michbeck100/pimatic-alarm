@@ -67,6 +67,9 @@ Do you like this plugin? Then consider a donation to support development.
 [![Flattr pimatic-alarm](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/submit/auto?user_id=michbeck100&url=https://github.com/michbeck100/pimatic-alarm&title=pimatic-alarm&language=&tags=github&category=software)
 
 ### Changelog
+0.1.1
+* Use empty string as trigger for no alarm because trigger is shown in gui next to switch
+
 0.1.0
 * [#2](https://github.com/michbeck100/pimatic-alarm/issues/2) setting name of triggering device into variable
 * added alarm event
