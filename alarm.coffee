@@ -27,8 +27,10 @@ module.exports = (env) =>
         configDef: deviceConfigDef.AlarmSwitch
         createCallback: (config, lastState) =>
           device = new AlarmSystem(config, lastState)
-          group = @groupFromDevice(device)
+          group = @groupFromDeviceId(device.id)
           group.active = lastState?.state?.value or false
+          device.plugin = @
+          device.group = group
           device.on 'state', (state) =>
             if state is false
               @setAlarm(device, false) # switch off alarm system
@@ -40,7 +42,7 @@ module.exports = (env) =>
 
       @framework.on 'deviceAdded', (device) =>
         if device instanceof AlarmSystem then return
-        group = @groupFromDevice(device)
+        group = @groupFromDeviceId(device.id)
 
         register = (event, expectedValue) =>
           if device.id in group.includes
@@ -64,7 +66,7 @@ module.exports = (env) =>
             env.logger.debug device.id + ' registered as actuator for alarm system'
 
     setAlarm: (triggeringDevice, alarm) =>
-      group = @groupFromDevice(triggeringDevice)
+      group = @groupFromDeviceId(triggeringDevice.id)
       if group.active
         if group.alarm is alarm then return
         group.alarm = alarm
@@ -81,14 +83,18 @@ module.exports = (env) =>
           else
             env.logger.debug 'unsupported actuator ' + actuator.id
 
-    groupFromDevice: (device) =>
+    groupFromDeviceId: (deviceId) =>
+      return undefined unless deviceId?
       return _.find @_groups, (item) ->
-        return _.indexOf(item.includes, device.id) >= 0
+        return _.indexOf(item.includes, deviceId) >= 0
 
   class AlarmSwitch extends env.devices.DummySwitch
 
   class AlarmSystem extends env.devices.DummySwitch
     _trigger: ""
+
+    plugin: null
+    group: null
 
     attributes:
       trigger:
@@ -102,6 +108,8 @@ module.exports = (env) =>
     getTrigger: () -> Promise.resolve(@_trigger)
 
     _setTrigger: (trigger) ->
+      group = @plugin.groupFromDeviceId(trigger)
+      # return if group?.name != @group.name
       # use emtpy string because trigger is shown in gui next to switch
       trigger = "" unless trigger
       @_trigger = if trigger then trigger else ""
