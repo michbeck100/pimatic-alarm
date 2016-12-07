@@ -10,9 +10,11 @@ module.exports = (env) =>
     init: (app, @framework, @config) =>
       env.logger.info("Starting alarm system")
 
-      @_groups = @config.groups
+      @_groups = _.clone(@config.groups, true)
       for group in @_groups
         group.actuators = []
+        group.active = false
+        group.alarm = false
 
       deviceConfigDef = require('./device-config-schema.coffee')
 
