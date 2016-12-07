@@ -29,15 +29,14 @@ module.exports = (env) =>
           device = new AlarmSystem(config, lastState)
           group = @groupFromDeviceId(device.id)
           group.active = lastState?.state?.value or false
-          device.plugin = @
-          device.group = group
+          device._group = group
           device.on 'state', (state) =>
             if state is false
               @setAlarm(device, false) # switch off alarm system
             env.logger.info 'alarm system' + if state then ' activated' else ' deactivated'
             group.active = state
-          @on 'alarm', (trigger) ->
-            device._setTrigger(trigger?.name)
+          @on 'alarm', (obj) ->
+            device._setTrigger(obj)
           return device
 
       @framework.on 'deviceAdded', (device) =>
@@ -72,10 +71,10 @@ module.exports = (env) =>
         group.alarm = alarm
         if alarm
           env.logger.debug 'device ' + triggeringDevice.id + ' activated the alarm'
-          @emit 'alarm', triggeringDevice
+          @emit 'alarm', {group: group, trigger: triggeringDevice}
         else
           # when switching alarm to off, set trigger to null
-          @emit 'alarm', null
+          @emit 'alarm', {group: group, trigger: null}
 
         for actuator in group.actuators
           if actuator instanceof env.devices.SwitchActuator
@@ -92,9 +91,7 @@ module.exports = (env) =>
 
   class AlarmSystem extends env.devices.DummySwitch
     _trigger: ""
-
-    plugin: null
-    group: null
+    _group: null
 
     attributes:
       trigger:
@@ -107,9 +104,9 @@ module.exports = (env) =>
 
     getTrigger: () -> Promise.resolve(@_trigger)
 
-    _setTrigger: (trigger) ->
-      group = @plugin.groupFromDeviceId(trigger)
-      # return if group?.name != @group.name
+    _setTrigger: (obj) ->
+      return unless obj.group.name == @_group.name
+      trigger = obj.trigger?.name
       # use emtpy string because trigger is shown in gui next to switch
       trigger = "" unless trigger
       @_trigger = if trigger then trigger else ""
