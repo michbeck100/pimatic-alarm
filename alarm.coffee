@@ -40,7 +40,8 @@ module.exports = (env) =>
           device.on 'state', (state) =>
             if state is false
               @setAlarm(device, false) # switch off alarm system
-            env.logger.info "alarm group \"#{group.name}\" #{if state then 'activated' else 'deactivated'}"
+            env.logger.info "alarm group \"#{group.name}\" " +
+                "#{if state then 'activated' else 'deactivated'}"
             group.active = state
           @on 'alarm', (obj) ->
             device._setTrigger(obj)
@@ -53,7 +54,8 @@ module.exports = (env) =>
 
         register = (event, expectedValue) =>
           if device.id in group.includes
-            env.logger.debug "registered \"#{device.id}\" as sensor for alarm group \"#{group.name}\""
+            env.logger.debug "registered \"#{device.id}\" " +
+                "as sensor for alarm group \"#{group.name}\""
             device.on event, (value) =>
               if value is expectedValue
                 @setAlarm(device, true)
@@ -70,7 +72,8 @@ module.exports = (env) =>
         else if device instanceof env.devices.Actuator
           if device.id in group.includes
             group.actuators.push device
-            env.logger.debug "device \"#{device.id}\" registered as actuator for alarm group \"#{group.name}\""
+            env.logger.debug "device \"#{device.id}\" registered as " +
+                "actuator for alarm group \"#{group.name}\""
 
     setAlarm: (triggeringDevice, alarm) =>
       group = @groupFromDeviceId(triggeringDevice.id)
@@ -78,7 +81,8 @@ module.exports = (env) =>
         if group.alarm is alarm then return
         group.alarm = alarm
         if alarm
-          env.logger.info "device \"#{triggeringDevice.id}\" activated the alarm for group \"#{group.name}\""
+          env.logger.info "device \"#{triggeringDevice.id}\" " +
+              "activated the alarm for group \"#{group.name}\""
           @emit 'alarm', {group: group, trigger: triggeringDevice}
         else
           # when switching alarm to off, set trigger to null
@@ -89,7 +93,8 @@ module.exports = (env) =>
           if actuator instanceof env.devices.SwitchActuator
             actuator.changeStateTo(alarm)
           else
-            env.logger.debug "unsupported actuator \"#{actuator.id}\" found in group \"#{group.name}\""
+            env.logger.debug "unsupported actuator \"#{actuator.id}\" " +
+                "found in group \"#{group.name}\""
 
     groupFromDeviceId: (deviceId) =>
       return undefined unless deviceId?
