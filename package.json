@@ -19,9 +19,7 @@
     "url": "git://github.com/michbeck100/pimatic-alarm.git"
   },
   "configSchema": "alarm-config-schema.coffee",
-  "scripts": {
-    "test": "grunt test"
-  },
+  "scripts": {},
   "dependencies": {},
   "devDependencies": {
     "blanket": "^1.2.2",
