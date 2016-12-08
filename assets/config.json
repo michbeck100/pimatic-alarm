@@ -75,6 +75,7 @@
           "includes": [
             "prealert-system",
             "prealert-switch",
+            "prealert-alarm",
             "presence-sensor"
           ]
         },
@@ -83,22 +84,28 @@
           "includes": [
             "alert-system",
             "alert-switch",
+            "alert-alarm",
             "contact-sensor"
           ]
         }
-      ]
+      ],
+      "includes": []
     }
   ],
   "devices": [
     {
       "buttons": [
         {
-          "id": "contact",
-          "text": "contact"
+          "id": "contact-close",
+          "text": "close contact"
+        },
+        {
+          "id": "contact-open",
+          "text": "open contact"
         },
         {
           "id": "presence",
-          "text": "presence"
+          "text": "trigger presence"
         }
       ],
       "id": "buttons-device",
@@ -126,6 +133,16 @@
       "class": "AlarmSwitch"
     },
     {
+      "id": "alert-alarm",
+      "name": "Alert !!!",
+      "class": "DummySwitch"
+    },
+    {
+      "id": "prealert-alarm",
+      "name": "Prealert !!!",
+      "class": "DummySwitch"
+    },
+    {
       "id": "contact-sensor",
       "name": "contact-sensor",
       "class": "DummyContactSensor"
@@ -147,9 +164,16 @@
       "logging": true
     },
     {
-      "id": "contact-sensor",
-      "name": "contact-sensor",
-      "rule": "when contact is pressed then open contact-sensor for 10 seconds",
+      "id": "contact-open",
+      "name": "contact-open",
+      "rule": "when contact-open is pressed then open contact-sensor",
+      "active": true,
+      "logging": true
+    },
+    {
+      "id": "contact-close",
+      "name": "contact-close",
+      "rule": "when contact-close is pressed then close contact-sensor",
       "active": true,
       "logging": true
     }
@@ -170,6 +194,12 @@
         },
         {
           "deviceId": "alert-switch"
+        },
+        {
+          "deviceId": "prealert-alarm"
+        },
+        {
+          "deviceId": "alert-alarm"
         },
         {
           "deviceId": "contact-sensor"
