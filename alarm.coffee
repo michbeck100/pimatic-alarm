@@ -10,6 +10,13 @@ module.exports = (env) =>
     init: (app, @framework, @config) =>
       env.logger.info("Starting alarm system")
 
+      # create alarm group "delault" from legacy configuration
+      if @config.includes?.length > 0
+        @config.groups = [
+          {'name': 'default', 'includes': _.clone(@config.includes, true)}
+        ]
+        @config.includes = undefined
+
       @_groups = _.clone(@config.groups, true)
       for group in @_groups
         group.actuators = []
