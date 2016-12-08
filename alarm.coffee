@@ -49,6 +49,7 @@ module.exports = (env) =>
       @framework.on 'deviceAdded', (device) =>
         if device instanceof AlarmSystem then return
         group = @groupFromDeviceId(device.id)
+        return unless group? # ignore non-group devices
 
         register = (event, expectedValue) =>
           if device.id in group.includes
