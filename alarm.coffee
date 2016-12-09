@@ -31,7 +31,7 @@ module.exports = (env) =>
           return new AlarmSwitch(config, lastState)
 
       @framework.deviceManager.registerDeviceClass 'AlarmSystem',
-        configDef: deviceConfigDef.AlarmSwitch
+        configDef: deviceConfigDef.AlarmSystem
         createCallback: (config, lastState) =>
           device = new AlarmSystem(config, lastState)
           group = @groupFromDeviceId(device.id)
@@ -40,9 +40,9 @@ module.exports = (env) =>
           device.on 'state', (state) =>
             if state is false
               @setAlarm(device, false) # switch off alarm system
-            env.logger.info "alarm group \"#{group.name}\" " +
-                "#{if state then 'activated' else 'deactivated'}"
-            group.active = state
+            env.logger.info "alarm group \"#{device._group.name}\" \
+                            #{if state then 'activated' else 'deactivated'}"
+            device._group.active = state
           @on 'alarm', (obj) ->
             device._setTrigger(obj)
           return device
