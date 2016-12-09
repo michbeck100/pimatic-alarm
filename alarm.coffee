@@ -1,20 +1,27 @@
 module.exports = (env) =>
   Promise = env.require 'bluebird'
   t = env.require('decl-api').types
+  _ = env.require 'lodash'
 
   class AlarmPlugin extends env.plugins.Plugin
 
-    _actuators: []
-
-    _active: false
-    _alarm: false
-
-    _includes: []
+    _groups: []
 
     init: (app, @framework, @config) =>
-      env.logger.info("Starting alarm system")
+      env.logger.info "Starting alarm system ..."
 
-      @_includes = @config.includes
+      # create alarm group "default" from legacy configuration
+      if @config.includes?.length > 0
+        @config.groups = [
+          {'name': 'default', 'includes': _.clone(@config.includes, true)}
+        ]
+        @config.includes = undefined
+
+      @_groups = _.clone(@config.groups, true)
+      for group in @_groups
+        group.actuators = []
+        group.active = false
+        group.alarm = false
 
       deviceConfigDef = require('./device-config-schema.coffee')
 
@@ -24,31 +31,37 @@ module.exports = (env) =>
           return new AlarmSwitch(config, lastState)
 
       @framework.deviceManager.registerDeviceClass 'AlarmSystem',
-        configDef: deviceConfigDef.AlarmSwitch
+        configDef: deviceConfigDef.AlarmSystem
         createCallback: (config, lastState) =>
-          @_active = lastState?.state?.value or false
           device = new AlarmSystem(config, lastState)
+          group = @groupFromDeviceId(device.id)
+          group.active = lastState?.state?.value or false
+          device._group = group
           device.on 'state', (state) =>
             if state is false
               @setAlarm(device, false) # switch off alarm system
-            env.logger.info 'alarm system' + if state then ' activated' else ' deactivated'
-            @_active = state
-          @on 'alarm', (trigger) ->
-            device._setTrigger(trigger?.name)
+            env.logger.info "alarm group \"#{device._group.name}\" \
+                            #{if state then 'activated' else 'deactivated'}"
+            device._group.active = state
+          @on 'alarm', (obj) ->
+            device._setTrigger(obj)
           return device
 
       @framework.on 'deviceAdded', (device) =>
         if device instanceof AlarmSystem then return
+        group = @groupFromDeviceId(device.id)
+        return unless group? # ignore non-group devices
 
         register = (event, expectedValue) =>
-          if device.id in @_includes
-            env.logger.debug 'registered ' + device.id + " as sensor for alarm system"
+          if device.id in group.includes
+            env.logger.debug "registered \"#{device.id}\" " +
+                "as sensor for alarm group \"#{group.name}\""
             device.on event, (value) =>
               if value is expectedValue
                 @setAlarm(device, true)
 
         if device instanceof AlarmSwitch
-          @_actuators.push device
+          group.actuators.push device
           # AlarmSwitch is the only actuator acting as sensor
           device.on 'state', (state) =>
             @setAlarm(device, state) # AlarmSwitch also switches off the alarm
@@ -57,31 +70,42 @@ module.exports = (env) =>
         else if device instanceof env.devices.ContactSensor
           register 'contact', false
         else if device instanceof env.devices.Actuator
-          if device.id in @_includes
-            @_actuators.push device
-            env.logger.debug device.id + ' registered as actuator for alarm system'
+          if device.id in group.includes
+            group.actuators.push device
+            env.logger.debug "device \"#{device.id}\" registered as " +
+                "actuator for alarm group \"#{group.name}\""
 
     setAlarm: (triggeringDevice, alarm) =>
-      if @_active
-        if @_alarm is alarm then return
-        @_alarm = alarm
+      group = @groupFromDeviceId(triggeringDevice.id)
+      if group.active
+        if group.alarm is alarm then return
+        group.alarm = alarm
         if alarm
-          env.logger.debug 'device ' + triggeringDevice.id + ' activated the alarm'
-          @emit 'alarm', triggeringDevice
+          env.logger.info "device \"#{triggeringDevice.id}\" " +
+              "activated the alarm for group \"#{group.name}\""
+          @emit 'alarm', {group: group, trigger: triggeringDevice}
         else
           # when switching alarm to off, set trigger to null
-          @emit 'alarm', null
+          env.logger.info "alarm for group \"#{group.name}\" switched off"
+          @emit 'alarm', {group: group, trigger: null}
 
-        for actuator in @_actuators
+        for actuator in group.actuators
           if actuator instanceof env.devices.SwitchActuator
             actuator.changeStateTo(alarm)
           else
-            env.logger.debug 'unsupported actuator ' + actuator.id
+            env.logger.debug "unsupported actuator \"#{actuator.id}\" " +
+                "found in group \"#{group.name}\""
+
+    groupFromDeviceId: (deviceId) =>
+      return undefined unless deviceId?
+      return _.find @_groups, (item) ->
+        return _.indexOf(item.includes, deviceId) >= 0
 
   class AlarmSwitch extends env.devices.DummySwitch
 
   class AlarmSystem extends env.devices.DummySwitch
     _trigger: ""
+    _group: null
 
     attributes:
       trigger:
@@ -94,7 +118,9 @@ module.exports = (env) =>
 
     getTrigger: () -> Promise.resolve(@_trigger)
 
-    _setTrigger: (trigger) ->
+    _setTrigger: (obj) ->
+      return unless obj.group.name == @_group.name
+      trigger = obj.trigger?.name
       # use emtpy string because trigger is shown in gui next to switch
       trigger = "" unless trigger
       @_trigger = if trigger then trigger else ""

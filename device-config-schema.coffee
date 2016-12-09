@@ -5,4 +5,9 @@ module.exports = {
     type: "object"
     extensions: ["xLink", "xConfirm", "xOnLabel", "xOffLabel"]
     properties: {}
+  AlarmSystem:
+    title: "AlarmSytem config"
+    type: "object"
+    extensions: ["xLink", "xConfirm", "xOnLabel", "xOffLabel"]
+    properties: {}
 }
