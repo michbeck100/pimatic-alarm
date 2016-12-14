@@ -10,7 +10,7 @@ pimatic-alarm
 
 pimatic-alarm is a [pimatic](https://github.com/pimatic/pimatic) plugin, that creates an alarm system based on the existing sensors and actuators defined in the pimatic installation.
 
-The alarm system can switches on all devices, that extend from SwitchActuator, e.g. lights or smoke alarms.
+The alarm system can switch all devices, that extend from SwitchActuator, e.g. lights or smoke alarms.
 The alarm can triggered by any of the devices, that extend from PresenceSensor or ContactSensor, e.g. [HomeduinoRFPir](https://github.com/pimatic/pimatic-homeduino#pir-sensor-example) or [HomeduinoRFContactSensor](https://github.com/pimatic/pimatic-homeduino#contact-sensor-example).
 
 #### Installation
@@ -21,7 +21,7 @@ To install the plugin just add the plugin to the config.json of pimatic:
       "plugin": "alarm"   
     }
 
-The plugin comes with two types of devices. The "AlarmSwitch" can be used to manually trigger an alarm and the "AlarmSystem" is used to activate the alarm system.
+The plugin comes with two types of devices. The "AlarmSystem" is used to activate the alarm system. The "AlarmSwitch" can be used to manually trigger an alarm e.g. by rule. It can also disable an activated alarm.
 
 Usage:
 
@@ -40,17 +40,19 @@ Usage:
 ]
 ```
 
-Note that you need at least the "AlarmSystem" device, because the default state of the alarm system is "off".
+Note that you need at least one "AlarmSystem" device.
 
 #### Configuration
 
-To add devices to the alarm system, the configuration of pimatic-alarm must be extended by adding a list of device ids to the attribute called "includes" of the plugin configuration.
+To add devices to the alarm system, the configuration must be extended by adding a list of device ids to the attribute called "includes" of the alarm system device configuration.
 Example:
 
 ```json
-"plugins": [
+"devices": [
   {
-    "plugin": "alarm",
+    "id": "alarm_system",
+    "name": "Alarm system",
+    "class": "AlarmSystem",
     "includes": [
       "id_of_switch",
       "id_of_presenceSensor"
